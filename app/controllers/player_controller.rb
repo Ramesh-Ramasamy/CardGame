@@ -1,9 +1,14 @@
 class PlayerController < ApplicationController
 
-  before_filter: load_players
+  before_action :load_players, except: [:new]
+  before_action :current_player, only: [:accept, :friend_list]
 
   def new
-    @player = Player.new({name: params[:name], email: params[:email], params[:password]})
+    @player = Player.new()
+  end
+
+  def create
+    @player = Player.new({name: params[:name], email: params[:email], password: params[:password]})
     if @player.save!
       "Successfully registered!.."
     else
@@ -25,7 +30,14 @@ class PlayerController < ApplicationController
   end
 
   def accept
-    player    
+    request = UserFollow.find_by_player2_and_player1(@current_player, params[:player])
+    request.status = "accepted"
+    UserFollow.create!({player1: @current_player, player2: params[:player], status = "accepted"})
+  end
+
+  def friend_list
+    @friends = UserFollow.find_by_player1_and_status(@current_player,"accepted")
+    @firend_requests = UserFollow.find_by_player2_and_status(@current_player,"requested")
   end
 
   private
